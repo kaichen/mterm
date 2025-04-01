@@ -4,11 +4,11 @@ import Gradient from 'ink-gradient';
 import OpenAI from 'openai';
 import React, {useState} from 'react';
 
-import Spinner from 'ink-spinner';
 import {ScrollArea} from './components/scrollarea.js';
 import Table from './components/table.js';
 import {useClearExit} from './hooks/useClearExit.js';
 import ChatScreen from './components/ChatScreen.js';
+import { Alert, Spinner } from '@inkjs/ui';
 
 interface Props {
 	name: string | undefined;
@@ -61,23 +61,8 @@ export default function App({name = 'Kai'}: Props) {
 
 			const apiKey = process.env['OPENAI_API_KEY'];
 			if (!apiKey) {
-				// 如果没有API密钥，使用模拟数据进行演示
-				setTimeout(() => {
-					const mockModels = [
-						{id: 'gpt-4o', created: 1683758102, owned_by: 'openai'},
-						{id: 'gpt-4-turbo', created: 1683758102, owned_by: 'openai'},
-						{id: 'gpt-3.5-turbo', created: 1677610602, owned_by: 'openai'},
-						{id: 'dall-e-3', created: 1698274942, owned_by: 'openai'},
-						{id: 'whisper-1', created: 1677532384, owned_by: 'openai'},
-						{
-							id: 'text-embedding-3-large',
-							created: 1705953180,
-							owned_by: 'openai',
-						},
-					];
-					setModels(mockModels);
-					setLoading(false);
-				}, 1000); // 模拟网络延迟
+				setError('OPENAI_API_KEY environment variable is not set.');
+				setLoading(false);
 				return;
 			}
 
@@ -129,9 +114,9 @@ export default function App({name = 'Kai'}: Props) {
 
 			{/* Error message */}
 			{error && (
-				<Box marginTop={1}>
+				<Alert variant="error">
 					<Text color="red">Error: {error}</Text>
-				</Box>
+				</Alert>
 			)}
 
 			{/* Models list */}

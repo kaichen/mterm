@@ -1,6 +1,6 @@
 import {Box, Text} from 'ink';
-import {hash} from 'ohash';
 import React from 'react';
+import {hash} from 'ohash';
 
 /* Table */
 

@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Box, Text, useInput } from 'ink';
-import { ScrollArea } from './scrollarea.js';
-import Spinner from 'ink-spinner';
+import { Alert, Spinner } from '@inkjs/ui';
 import OpenAI from 'openai';
 
-// Message type definition
+import { ScrollArea } from './scrollarea.js';
+
 interface Message {
   role: 'system' | 'user' | 'assistant';
   content: string;
@@ -122,7 +122,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ onExit }) => {
   };
 
   return (
-    <Box flexDirection="column" height={25}>
+    <Box flexDirection="column" height={30}>
       <Box marginBottom={1}>
         <Text bold>
           Chat with OpenAI{' '}
@@ -131,7 +131,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ onExit }) => {
       </Box>
 
       {/* Chat messages */}
-      <ScrollArea height={20}>
+      <ScrollArea height={24}>
         <Box flexDirection="column">
           {messages
             .filter(msg => msg.role !== 'system')
@@ -154,9 +154,9 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ onExit }) => {
 
       {/* Error message */}
       {error && (
-        <Box marginTop={1} marginBottom={1}>
+        <Alert variant="error">
           <Text color="red">Error: {error}</Text>
-        </Box>
+        </Alert>
       )}
 
       {/* Input area */}

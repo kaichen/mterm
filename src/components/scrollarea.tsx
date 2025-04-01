@@ -1,6 +1,5 @@
 import {Box, type DOMElement, measureElement, useFocus, useInput} from 'ink';
-import type React from 'react';
-import {useEffect, useReducer, useRef} from 'react';
+import React, {useEffect, useReducer, useRef} from 'react';
 
 interface ScrollAreaState {
 	innerHeight: number;
