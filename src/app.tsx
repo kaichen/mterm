@@ -8,6 +8,7 @@ import Spinner from 'ink-spinner';
 import {ScrollArea} from './components/scrollarea.js';
 import Table from './components/table.js';
 import {useClearExit} from './hooks/useClearExit.js';
+import ChatScreen from './components/ChatScreen.js';
 
 interface Props {
 	name: string | undefined;
@@ -19,19 +20,31 @@ interface Model {
 	owned_by: string;
 }
 
+// App screens
+type Screen = 'main' | 'chat';
+
 export default function App({name = 'Kai'}: Props) {
 	useClearExit();
 	const [input, setInput] = useState('');
 	const [models, setModels] = useState<Model[]>([]);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState('');
+	const [currentScreen, setCurrentScreen] = useState<Screen>('main');
 
 	useInput((value, key) => {
+		// Only handle input in main screen
+		if (currentScreen !== 'main') return;
+
 		if (key.return) {
 			if (input === '/models') {
 				fetchModels();
+				setInput('');
+			} else if (input === '/chat') {
+				setCurrentScreen('chat');
+				setInput('');
+			} else {
+				setInput('');
 			}
-			setInput('');
 		} else if (key.backspace || key.delete) {
 			setInput(prev => prev.slice(0, -1));
 		} else if (key.escape) {
@@ -83,6 +96,11 @@ export default function App({name = 'Kai'}: Props) {
 		}
 	};
 
+	// Handle screen changes
+	if (currentScreen === 'chat') {
+		return <ChatScreen onExit={() => setCurrentScreen('main')} />;
+	}
+
 	return (
 		<Box flexDirection="column">
 			<Gradient name="rainbow">
@@ -130,6 +148,10 @@ export default function App({name = 'Kai'}: Props) {
 			<Box marginTop={1}>
 				<Text dimColor>
 					Type <Text color="green">/models</Text> to see available OpenAI models
+				</Text>
+				<Text dimColor> | </Text>
+				<Text dimColor>
+					Type <Text color="green">/chat</Text> to start chatting with OpenAI
 				</Text>
 			</Box>
 		</Box>

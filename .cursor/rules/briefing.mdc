@@ -8,3 +8,4 @@ alwaysApply: true
 - DONT run any server via `npm run`
 - DONT install package, just tell me the required dependencies.
 - read md files in docs folder if change with mentioned package.
+- use gpt-4o-mini as testing model
