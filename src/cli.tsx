@@ -1,12 +1,12 @@
 #!/usr/bin/env node
-import {Box, Text, render} from 'ink';
+import {Box, Text, render, TextProps} from 'ink';
 import meow from 'meow';
 import React from 'react';
 import App from './app.js';
 import {enterFullscreen, exitFullscreen} from './utils/terminal.js';
 import {useAtom} from 'jotai';
 import {globalErrorAtom} from './store/ui.js';
-import {Spinner, ThemeProvider, extendTheme, defaultTheme} from '@inkjs/ui';
+import {ThemeProvider, extendTheme, defaultTheme} from '@inkjs/ui';
 
 const cli = meow(
 	`
@@ -34,7 +34,7 @@ const customTheme = extendTheme(defaultTheme, {
 	components: {
 		Spinner: {
 			styles: {
-				frame: (): TextProps => ({
+				frame: (props: object): TextProps => ({
 					color: 'magenta',
 				}),
 			},
