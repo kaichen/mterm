@@ -1,21 +1,21 @@
-import React from "react";
-import { Box, Text } from "ink";
-import { sha1 } from "object-hash";
+import {Box, Text} from 'ink';
+import {hash} from 'ohash';
+import React from 'react';
 
 /* Table */
 
 type Scalar = string | number | boolean | null | undefined;
 
-type ScalarDict = {
+interface ScalarDict {
 	[key: string]: Scalar;
-};
+}
 
 export type CellProps = React.PropsWithChildren<{
 	column: number;
 	value: Scalar;
 }>;
 
-export type TableProps<T extends ScalarDict> = {
+export interface TableProps<T extends ScalarDict> {
 	/**
 	 * List of values (rows).
 	 */
@@ -23,7 +23,7 @@ export type TableProps<T extends ScalarDict> = {
 	/**
 	 * Columns that we should display in the table.
 	 */
-	columns: (keyof T)[];
+	columns: Array<keyof T>;
 	/**
 	 * Cell padding.
 	 */
@@ -40,12 +40,12 @@ export type TableProps<T extends ScalarDict> = {
 	 * Component used to render the skeleton of the table.
 	 */
 	skeleton: (props: React.PropsWithChildren<{}>) => JSX.Element;
-};
+}
 
 /* Table */
 
 export default class Table<T extends ScalarDict> extends React.Component<
-	Pick<TableProps<T>, "data"> & Partial<TableProps<T>>
+	Pick<TableProps<T>, 'data'> & Partial<TableProps<T>>
 > {
 	/* Config */
 
@@ -55,19 +55,19 @@ export default class Table<T extends ScalarDict> extends React.Component<
 	getConfig(): TableProps<T> {
 		return {
 			data: this.props.data,
-			columns: this.props.columns || this.getDataKeys(),
+			columns: this.props.columns != null || this.getDataKeys(),
 			padding: this.props.padding || 1,
-			header: this.props.header || Header,
-			cell: this.props.cell || Cell,
-			skeleton: this.props.skeleton || Skeleton,
+			header: this.props.header != null || Header,
+			cell: this.props.cell != null || Cell,
+			skeleton: this.props.skeleton != null || Skeleton,
 		};
 	}
 
 	/**
 	 * Gets all keyes used in data by traversing through the data.
 	 */
-	getDataKeys(): (keyof T)[] {
-		let keys = new Set<keyof T>();
+	getDataKeys(): Array<keyof T> {
+		const keys = new Set<keyof T>();
 
 		// Collect all the keys.
 		for (const data of this.props.data) {
@@ -85,13 +85,13 @@ export default class Table<T extends ScalarDict> extends React.Component<
 	 *
 	 * Returns a list of column names and their widths.
 	 */
-	getColumns(): Column<T>[] {
-		const { columns, padding } = this.getConfig();
+	getColumns(): Array<Column<T>> {
+		const {columns, padding} = this.getConfig();
 
-		const widths: Column<T>[] = columns.map((key) => {
+		const widths: Array<Column<T>> = columns.map(key => {
 			const header = String(key).length;
 			/* Get the width of each cell in the column */
-			const data = this.props.data.map((data) => {
+			const data = this.props.data.map(data => {
 				const value = data[key];
 
 				if (value == undefined || value == null) return 0;
@@ -103,7 +103,7 @@ export default class Table<T extends ScalarDict> extends React.Component<
 			/* Construct a cell */
 			return {
 				column: key,
-				width: width,
+				width,
 				key: String(key),
 			};
 		});
@@ -115,10 +115,10 @@ export default class Table<T extends ScalarDict> extends React.Component<
 	 * Returns a (data) row representing the headings.
 	 */
 	getHeadings(): Partial<T> {
-		const { columns } = this.getConfig();
+		const {columns} = this.getConfig();
 
 		const headings: Partial<T> = columns.reduce(
-			(acc, column) => ({ ...acc, [column]: column }),
+			(acc, column) => ({...acc, [column]: column}),
 			{},
 		);
 
@@ -134,10 +134,10 @@ export default class Table<T extends ScalarDict> extends React.Component<
 		skeleton: {
 			component: this.getConfig().skeleton,
 			// chars
-			line: "─",
-			left: "┌",
-			right: "┐",
-			cross: "┬",
+			line: '─',
+			left: '┌',
+			right: '┐',
+			cross: '┬',
 		},
 	});
 
@@ -148,10 +148,10 @@ export default class Table<T extends ScalarDict> extends React.Component<
 		skeleton: {
 			component: this.getConfig().skeleton,
 			// chars
-			line: " ",
-			left: "│",
-			right: "│",
-			cross: "│",
+			line: ' ',
+			left: '│',
+			right: '│',
+			cross: '│',
 		},
 	});
 
@@ -162,10 +162,10 @@ export default class Table<T extends ScalarDict> extends React.Component<
 		skeleton: {
 			component: this.getConfig().skeleton,
 			// chars
-			line: "─",
-			left: "├",
-			right: "┤",
-			cross: "┼",
+			line: '─',
+			left: '├',
+			right: '┤',
+			cross: '┼',
 		},
 	});
 
@@ -176,10 +176,10 @@ export default class Table<T extends ScalarDict> extends React.Component<
 		skeleton: {
 			component: this.getConfig().skeleton,
 			// chars
-			line: " ",
-			left: "│",
-			right: "│",
-			cross: "│",
+			line: ' ',
+			left: '│',
+			right: '│',
+			cross: '│',
 		},
 	});
 
@@ -190,10 +190,10 @@ export default class Table<T extends ScalarDict> extends React.Component<
 		skeleton: {
 			component: this.getConfig().skeleton,
 			// chars
-			line: "─",
-			left: "└",
-			right: "┘",
-			cross: "┴",
+			line: '─',
+			left: '└',
+			right: '┘',
+			cross: '┴',
 		},
 	});
 
@@ -210,23 +210,23 @@ export default class Table<T extends ScalarDict> extends React.Component<
 		return (
 			<Box flexDirection="column">
 				{/* Header */}
-				{this.header({ key: "header", columns, data: {} })}
-				{this.heading({ key: "heading", columns, data: headings })}
+				{this.header({key: 'header', columns, data: {}})}
+				{this.heading({key: 'heading', columns, data: headings})}
 				{/* Data */}
 				{this.props.data.map((row, index) => {
 					// Calculate the hash of the row based on its value and position
-					const key = `row-${sha1(row)}-${index}`;
+					const key = `row-${hash(row)}-${index}`;
 
 					// Construct a row.
 					return (
 						<Box flexDirection="column" key={key}>
-							{this.separator({ key: `separator-${key}`, columns, data: {} })}
-							{this.data({ key: `data-${key}`, columns, data: row })}
+							{this.separator({key: `separator-${key}`, columns, data: {}})}
+							{this.data({key: `data-${key}`, columns, data: row})}
 						</Box>
 					);
 				})}
 				{/* Footer */}
-				{this.footer({ key: "footer", columns, data: {} })}
+				{this.footer({key: 'footer', columns, data: {}})}
 			</Box>
 		);
 	}
@@ -234,7 +234,7 @@ export default class Table<T extends ScalarDict> extends React.Component<
 
 /* Helper components */
 
-type RowConfig = {
+interface RowConfig {
 	/**
 	 * Component used to render cells.
 	 */
@@ -259,19 +259,19 @@ type RowConfig = {
 		cross: string;
 		line: string;
 	};
-};
+}
 
-type RowProps<T extends ScalarDict> = {
+interface RowProps<T extends ScalarDict> {
 	key: string;
 	data: Partial<T>;
-	columns: Column<T>[];
-};
+	columns: Array<Column<T>>;
+}
 
-type Column<T> = {
+interface Column<T> {
 	key: string;
 	column: keyof T;
 	width: number;
-};
+}
 
 /**
  * Constructs a Row element from the configuration.
@@ -284,13 +284,13 @@ function row<T extends ScalarDict>(
 	const skeleton = config.skeleton;
 
 	/* Row */
-	return (props) => (
+	return props => (
 		<Box flexDirection="row">
 			{/* Left */}
 			<skeleton.component>{skeleton.left}</skeleton.component>
 			{/* Data */}
 			{...intersperse(
-				(i) => {
+				i => {
 					const key = `${props.key}-hseparator-${i}`;
 
 					// The horizontal separator.
@@ -367,16 +367,16 @@ export function Skeleton(props: React.PropsWithChildren<{}>) {
 function intersperse<T, I>(
 	intersperser: (index: number) => I,
 	elements: T[],
-): (T | I)[] {
+): Array<T | I> {
 	// Intersparse by reducing from left.
-	let interspersed: (T | I)[] = elements.reduce(
+	const interspersed: Array<T | I> = elements.reduce<Array<T | I>>(
 		(acc, element, index) => {
 			// Only add element if it's the first one.
 			if (acc.length === 0) return [element];
 			// Add the intersparser as well otherwise.
 			return [...acc, intersperser(index), element];
 		},
-		[] as (T | I)[],
+		[],
 	);
 
 	return interspersed;

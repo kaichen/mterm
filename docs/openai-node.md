@@ -31,13 +31,13 @@ The primary API for interacting with OpenAI models is the [Responses API](https:
 import OpenAI from 'openai';
 
 const client = new OpenAI({
-  apiKey: process.env['OPENAI_API_KEY'], // This is the default and can be omitted
+	apiKey: process.env['OPENAI_API_KEY'], // This is the default and can be omitted
 });
 
 const response = await client.responses.create({
-  model: 'gpt-4o',
-  instructions: 'You are a coding assistant that talks like a pirate',
-  input: 'Are semicolons optional in JavaScript?',
+	model: 'gpt-4o',
+	instructions: 'You are a coding assistant that talks like a pirate',
+	input: 'Are semicolons optional in JavaScript?',
 });
 
 console.log(response.output_text);
@@ -49,15 +49,15 @@ The previous standard (supported indefinitely) for generating text is the [Chat 
 import OpenAI from 'openai';
 
 const client = new OpenAI({
-  apiKey: process.env['OPENAI_API_KEY'], // This is the default and can be omitted
+	apiKey: process.env['OPENAI_API_KEY'], // This is the default and can be omitted
 });
 
 const completion = await client.chat.completions.create({
-  model: 'gpt-4o',
-  messages: [
-    { role: 'developer', content: 'Talk like a pirate.' },
-    { role: 'user', content: 'Are semicolons optional in JavaScript?' },
-  ],
+	model: 'gpt-4o',
+	messages: [
+		{role: 'developer', content: 'Talk like a pirate.'},
+		{role: 'user', content: 'Are semicolons optional in JavaScript?'},
+	],
 });
 
 console.log(completion.choices[0].message.content);
@@ -73,13 +73,13 @@ import OpenAI from 'openai';
 const client = new OpenAI();
 
 const stream = await client.responses.create({
-  model: 'gpt-4o',
-  input: 'Say "Sheep sleep deep" ten times fast!',
-  stream: true,
+	model: 'gpt-4o',
+	input: 'Say "Sheep sleep deep" ten times fast!',
+	stream: true,
 });
 
 for await (const event of stream) {
-  console.log(event);
+	console.log(event);
 }
 ```
 
@@ -95,27 +95,36 @@ Request parameters that correspond to file uploads can be passed in many differe
 ```ts
 import fs from 'fs';
 import fetch from 'node-fetch';
-import OpenAI, { toFile } from 'openai';
+import OpenAI, {toFile} from 'openai';
 
 const client = new OpenAI();
 
 // If you have access to Node `fs` we recommend using `fs.createReadStream()`:
-await client.files.create({ file: fs.createReadStream('input.jsonl'), purpose: 'fine-tune' });
+await client.files.create({
+	file: fs.createReadStream('input.jsonl'),
+	purpose: 'fine-tune',
+});
 
 // Or if you have the web `File` API you can pass a `File` instance:
-await client.files.create({ file: new File(['my bytes'], 'input.jsonl'), purpose: 'fine-tune' });
+await client.files.create({
+	file: new File(['my bytes'], 'input.jsonl'),
+	purpose: 'fine-tune',
+});
 
 // You can also pass a `fetch` `Response`:
-await client.files.create({ file: await fetch('https://somesite/input.jsonl'), purpose: 'fine-tune' });
+await client.files.create({
+	file: await fetch('https://somesite/input.jsonl'),
+	purpose: 'fine-tune',
+});
 
 // Finally, if none of the above are convenient, you can use our `toFile` helper:
 await client.files.create({
-  file: await toFile(Buffer.from('my bytes'), 'input.jsonl'),
-  purpose: 'fine-tune',
+	file: await toFile(Buffer.from('my bytes'), 'input.jsonl'),
+	purpose: 'fine-tune',
 });
 await client.files.create({
-  file: await toFile(new Uint8Array([0, 1, 2]), 'input.jsonl'),
-  purpose: 'fine-tune',
+	file: await toFile(new Uint8Array([0, 1, 2]), 'input.jsonl'),
+	purpose: 'fine-tune',
 });
 ```
 
@@ -207,20 +216,23 @@ Note that requests which time out will be [retried twice by default](#retries).
 All object responses in the SDK provide a `_request_id` property which is added from the `x-request-id` response header so that you can quickly log failing requests and report them back to OpenAI.
 
 ```ts
-const response = await client.responses.create({ model: 'gpt-4o', input: 'testing 123' });
-console.log(response._request_id) // req_123
+const response = await client.responses.create({
+	model: 'gpt-4o',
+	input: 'testing 123',
+});
+console.log(response._request_id); // req_123
 ```
 
 You can also access the Request ID using the `.withResponse()` method:
 
 ```ts
-const { data: stream, request_id } = await openai.responses
-  .create({
-    model: 'gpt-4o',
-    input: 'Say this is a test',
-    stream: true,
-  })
-  .withResponse();
+const {data: stream, request_id} = await openai.responses
+	.create({
+		model: 'gpt-4o',
+		input: 'Say this is a test',
+		stream: true,
+	})
+	.withResponse();
 ```
 
 ## Auto-pagination
@@ -230,27 +242,27 @@ You can use the `for await … of` syntax to iterate through items across all pa
 
 ```ts
 async function fetchAllFineTuningJobs(params) {
-  const allFineTuningJobs = [];
-  // Automatically fetches more pages as needed.
-  for await (const fineTuningJob of client.fineTuning.jobs.list({ limit: 20 })) {
-    allFineTuningJobs.push(fineTuningJob);
-  }
-  return allFineTuningJobs;
+	const allFineTuningJobs = [];
+	// Automatically fetches more pages as needed.
+	for await (const fineTuningJob of client.fineTuning.jobs.list({limit: 20})) {
+		allFineTuningJobs.push(fineTuningJob);
+	}
+	return allFineTuningJobs;
 }
 ```
 
 Alternatively, you can request a single page at a time:
 
 ```ts
-let page = await client.fineTuning.jobs.list({ limit: 20 });
+let page = await client.fineTuning.jobs.list({limit: 20});
 for (const fineTuningJob of page.data) {
-  console.log(fineTuningJob);
+	console.log(fineTuningJob);
 }
 
 // Convenience methods are provided for manually paginating:
 while (page.hasNextPage()) {
-  page = await page.getNextPage();
-  // ...
+	page = await page.getNextPage();
+	// ...
 }
 ```
 
@@ -259,11 +271,13 @@ while (page.hasNextPage()) {
 The Realtime API enables you to build low-latency, multi-modal conversational experiences. It currently supports text and audio as both input and output, as well as [function calling](https://platform.openai.com/docs/guides/function-calling) through a `WebSocket` connection.
 
 ```ts
-import { OpenAIRealtimeWebSocket } from 'openai/beta/realtime/websocket';
+import {OpenAIRealtimeWebSocket} from 'openai/beta/realtime/websocket';
 
-const rt = new OpenAIRealtimeWebSocket({ model: 'gpt-4o-realtime-preview-2024-12-17' });
+const rt = new OpenAIRealtimeWebSocket({
+	model: 'gpt-4o-realtime-preview-2024-12-17',
+});
 
-rt.on('response.text.delta', (event) => process.stdout.write(event.delta));
+rt.on('response.text.delta', event => process.stdout.write(event.delta));
 ```
 
 For more information see [realtime.md](realtime.md).
@@ -278,18 +292,21 @@ class instead of the `OpenAI` class.
 > won't always be correct.
 
 ```ts
-import { AzureOpenAI } from 'openai';
-import { getBearerTokenProvider, DefaultAzureCredential } from '@azure/identity';
+import {AzureOpenAI} from 'openai';
+import {getBearerTokenProvider, DefaultAzureCredential} from '@azure/identity';
 
 const credential = new DefaultAzureCredential();
 const scope = 'https://cognitiveservices.azure.com/.default';
 const azureADTokenProvider = getBearerTokenProvider(credential, scope);
 
-const openai = new AzureOpenAI({ azureADTokenProvider, apiVersion: "<The API version, e.g. 2024-10-01-preview>" });
+const openai = new AzureOpenAI({
+	azureADTokenProvider,
+	apiVersion: '<The API version, e.g. 2024-10-01-preview>',
+});
 
 const result = await openai.chat.completions.create({
-  model: 'gpt-4o',
-  messages: [{ role: 'user', content: 'Say hello!' }],
+	model: 'gpt-4o',
+	messages: [{role: 'user', content: 'Say hello!'}],
 });
 
 console.log(result.choices[0]!.message?.content);
@@ -336,8 +353,8 @@ Options on the client, such as retries, will be respected when making these requ
 
 ```ts
 await client.post('/some/path', {
-  body: { some_prop: 'foo' },
-  query: { some_query_arg: 'bar' },
+	body: {some_prop: 'foo'},
+	query: {some_query_arg: 'bar'},
 });
 ```
 
@@ -349,10 +366,10 @@ send will be sent as-is.
 
 ```ts
 client.foo.create({
-  foo: 'my_param',
-  bar: 12,
-  // @ts-expect-error baz is not yet public
-  baz: 'undocumented option',
+	foo: 'my_param',
+	bar: 12,
+	// @ts-expect-error baz is not yet public
+	baz: 'undocumented option',
 });
 ```
 
@@ -397,16 +414,16 @@ You may also provide a custom `fetch` function when instantiating the client,
 which can be used to inspect or alter the `Request` or `Response` before/after each request:
 
 ```ts
-import { fetch } from 'undici'; // as one example
+import {fetch} from 'undici'; // as one example
 import OpenAI from 'openai';
 
 const client = new OpenAI({
-  fetch: async (url: RequestInfo, init?: RequestInit): Promise<Response> => {
-    console.log('About to make a request', url, init);
-    const response = await fetch(url, init);
-    console.log('Got response', response);
-    return response;
-  },
+	fetch: async (url: RequestInfo, init?: RequestInit): Promise<Response> => {
+		console.log('About to make a request', url, init);
+		const response = await fetch(url, init);
+		console.log('Got response', response);
+		return response;
+	},
 });
 ```
 

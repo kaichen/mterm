@@ -1,16 +1,17 @@
 {
 	"name": "mterm",
-	"version": "0.0.0",
+	"version": "0.1.0",
 	"license": "MIT",
 	"bin": "dist/cli.js",
 	"type": "module",
 	"engines": {
-		"node": ">=16"
+		"node": ">=20"
 	},
 	"scripts": {
 		"build": "tsc",
 		"dev": "bun ./src/cli.jsx",
-		"test": "prettier --check . && xo && ava"
+		"format": "prettier --write .",
+		"test": "ava"
 	},
 	"files": [
 		"dist"
@@ -22,7 +23,7 @@
 		"ink-gradient": "^3.0.0",
 		"ink-spinner": "^5.0.0",
 		"meow": "^11.0.0",
-		"object-hash": "^3.0.0",
+		"ohash": "^2.0.11",
 		"openai": "^4.91.0",
 		"react": "^18.2.0"
 	},
@@ -38,8 +39,7 @@
 		"ink-testing-library": "^3.0.0",
 		"prettier": "^2.8.7",
 		"ts-node": "^10.9.1",
-		"typescript": "^5.0.3",
-		"xo": "^0.53.1"
+		"typescript": "^5.0.3"
 	},
 	"ava": {
 		"extensions": {
@@ -49,17 +49,6 @@
 		"nodeArguments": [
 			"--loader=ts-node/esm"
 		]
-	},
-	"xo": {
-		"extends": "xo-react",
-		"plugins": [
-			"react"
-		],
-		"prettier": true,
-		"rules": {
-			"react/no-unescaped-entities": "off",
-			"unicorn/prevent-abbreviations": "off"
-		}
 	},
 	"prettier": "@vdemedes/prettier-config"
 }

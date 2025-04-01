@@ -1,9 +1,9 @@
 #!/usr/bin/env node
-import React from 'react';
 import {render} from 'ink';
 import meow from 'meow';
+import React from 'react';
 import App from './app.js';
-import { enterFullscreen, exitFullscreen } from './utils/terminal.js';
+import {enterFullscreen, exitFullscreen} from './utils/terminal.js';
 
 const cli = meow(
 	`
@@ -28,9 +28,9 @@ const cli = meow(
 );
 
 enterFullscreen();
-const { clear, waitUntilExit } = render(<App name={cli.flags.name} />, {
-  exitOnCtrlC: false,
+const {clear, waitUntilExit} = render(<App name={cli.flags.name} />, {
+	exitOnCtrlC: false,
 });
 waitUntilExit().then(() => exitFullscreen());
 
-export { clear };
+export {clear};

@@ -895,7 +895,7 @@ Alternatively, pass a custom border style like so:
 		bottomLeft: '↗',
 		bottom: '↑',
 		bottomRight: '↖',
-		right: '←'
+		right: '←',
 	}}
 >
 	<Text>Custom</Text>
@@ -1180,8 +1180,8 @@ const Example = () => {
 					...previousTests,
 					{
 						id: previousTests.length,
-						title: `Test #${previousTests.length + 1}`
-					}
+						title: `Test #${previousTests.length + 1}`,
+					},
 				]);
 
 				timer = setTimeout(run, 100);
@@ -1320,7 +1320,7 @@ const text =
 render(
 	<HangingIndent bold dimColor indent={4}>
 		{text}
-	</HangingIndent>
+	</HangingIndent>,
 );
 ```
 
