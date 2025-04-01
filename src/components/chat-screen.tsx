@@ -51,7 +51,14 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({onExit}) => {
 		} else if (key.backspace || key.delete) {
 			setInput(prev => prev.slice(0, -1));
 		} else if (key.escape) {
-			setInput('');
+			// If the input is empty and ESC is pressed, return to main screen
+			// Otherwise, clear the input field
+			if (input.trim() === '') {
+				logger.info(`ESC pressed, returning to main screen`);
+				onExit();
+			} else {
+				setInput('');
+			}
 		} else if (!key.ctrl && !key.meta && value.length > 0) {
 			setInput(prev => prev + value);
 		} else {

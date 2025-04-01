@@ -1,7 +1,7 @@
 import {atom} from 'jotai';
 
 // App screens
-export type Screen = 'main' | 'chat';
+export type Screen = 'main' | 'chat' | 'models';
 
 export const currentScreenAtom = atom<Screen>('main');
 
