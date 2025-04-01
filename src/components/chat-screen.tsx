@@ -5,11 +5,11 @@ import {useAtom} from 'jotai';
 
 import {logger} from '../logger.js';
 import {ScrollArea} from './scroll-area.js';
-import {openaiClientAtom, openaiErrorAtom} from '../store/openai.js';
+import {openaiClientAtom, openaiErrorAtom, currentModelAtom} from '../store/openai.js';
 import {currentScreenAtom} from '../store/ui.js';
 
 interface Message {
-	role: 'system' | 'user' | 'assistant';
+	role: 'system' | 'user' | 'assistant' | 'developer';
 	content: string;
 }
 
@@ -20,7 +20,7 @@ interface ChatScreenProps {
 export const ChatScreen: React.FC<ChatScreenProps> = ({onExit}) => {
 	const [messages, setMessages] = useState<Message[]>([
 		{
-			role: 'system',
+			role: 'developer',
 			content:
 				'You are a helpful AI assistant. Be concise and clear in your responses.',
 		},
@@ -31,6 +31,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({onExit}) => {
 	const [currentScreen] = useAtom(currentScreenAtom);
 	const [openaiClient] = useAtom(openaiClientAtom);
 	const [openaiError] = useAtom(openaiErrorAtom);
+	const [currentModel, setCurrentModel] = useAtom(currentModelAtom);
 
 	// Handle user input
 	useInput((value, key) => {
@@ -38,15 +39,32 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({onExit}) => {
 		logger.info(`User input: ${JSON.stringify(key)}: ${value}`);
 		if (key.return) {
 			logger.info(`User input: ${input}`);
-			if (input.trim() === '/exit') {
+			const trimmedInput = input.trim();
+
+			// Handle commands
+			if (trimmedInput === '/exit') {
 				logger.info(`Exiting chat screen`);
 				onExit();
 				return;
+			} else if (trimmedInput.startsWith('/setmodel ')) {
+				const modelId = trimmedInput.substring('/setmodel '.length).trim();
+				if (modelId) {
+					logger.info(`Setting model to: ${modelId}`);
+					setCurrentModel(modelId);
+					setMessages(prev => [
+						...prev,
+						{
+							role: 'system',
+							content: `Model changed to ${modelId}`,
+						},
+					]);
+				}
+				setInput('');
+				return;
 			}
 
-			if (input.trim() === '') return;
-
-			sendMessage(input);
+			if (trimmedInput === '') return;
+			sendMessage(trimmedInput);
 			setInput('');
 		} else if (key.backspace || key.delete) {
 			setInput(prev => prev.slice(0, -1));
@@ -86,7 +104,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({onExit}) => {
 
 			// Send the request to OpenAI
 			const response = await openaiClient!.chat.completions.create({
-				model: 'gpt-4o-mini',
+				model: currentModel,
 				messages: messages.concat(userMessage),
 			});
 
@@ -139,8 +157,8 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({onExit}) => {
 		<Box flexDirection="column" height={30}>
 			<Box marginBottom={1}>
 				<Text bold>
-					Chat with OpenAI{' '}
-					<Text color="gray">(Type '/exit' to return to main screen)</Text>
+					Chat with OpenAI [<Text color="yellow">{currentModel}</Text>]{' '}
+					<Text color="gray">(Type '/exit' to return to main screen, '/setmodel {currentModel}' to change model)</Text>
 				</Text>
 			</Box>
 

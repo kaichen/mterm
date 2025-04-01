@@ -2,18 +2,20 @@ import {atom} from 'jotai';
 import OpenAI from 'openai';
 
 // Atom for storing OpenAI client instance
+import {atom} from 'jotai';
+import OpenAI from 'openai';
+// Atom for storing OpenAI client instance
 export const openaiClientAtom = atom<OpenAI | null>(() => {
 	const apiKey = process.env['OPENAI_API_KEY'];
-
 	if (!apiKey) {
 		return null;
 	}
-
 	return new OpenAI({
 		apiKey,
 	});
 });
-
+// Store the current model
+export const currentModelAtom = atom<string>('gpt-4o-mini');
 // Derived atom for error state (when client is null)
 export const openaiErrorAtom = atom(get => {
 	const client = get(openaiClientAtom);
