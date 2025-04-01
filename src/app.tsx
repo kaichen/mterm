@@ -1,14 +1,16 @@
 import {Box, Newline, Text, useInput} from 'ink';
+import {Alert, Spinner} from '@inkjs/ui';
 import BigText from 'ink-big-text';
 import Gradient from 'ink-gradient';
-import OpenAI from 'openai';
 import React, {useState} from 'react';
+import {useAtom} from 'jotai';
 
-import {ScrollArea} from './components/scrollarea.js';
-import Table from './components/table.js';
-import {useClearExit} from './hooks/useClearExit.js';
-import ChatScreen from './components/ChatScreen.js';
-import { Alert, Spinner } from '@inkjs/ui';
+import {ScrollArea} from './components/scroll-area.js';
+import {ChatScreen} from './components/chat-screen.js';
+import {useClearExit} from './hooks/use-clear-exit.js';
+import {openaiClientAtom, openaiErrorAtom} from './store/openai.js';
+import {currentScreenAtom} from './store/ui.js';
+import {logger} from './logger.js';
 
 interface Props {
 	name: string | undefined;
@@ -20,23 +22,25 @@ interface Model {
 	owned_by: string;
 }
 
-// App screens
-type Screen = 'main' | 'chat';
-
 export default function App({name = 'Kai'}: Props) {
 	useClearExit();
 	const [input, setInput] = useState('');
 	const [models, setModels] = useState<Model[]>([]);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState('');
-	const [currentScreen, setCurrentScreen] = useState<Screen>('main');
+	const [currentScreen, setCurrentScreen] = useAtom(currentScreenAtom);
+	const [openaiClient] = useAtom(openaiClientAtom);
+	const [openaiError] = useAtom(openaiErrorAtom);
 
 	useInput((value, key) => {
 		// Only handle input in main screen
 		if (currentScreen !== 'main') return;
+		logger.info(`Input: ${JSON.stringify(key)}: ${value}`);
 
 		if (key.return) {
+			logger.info(`Input: ${input}`);
 			if (input === '/models') {
+				setCurrentScreen('main');
 				fetchModels();
 				setInput('');
 			} else if (input === '/chat') {
@@ -51,6 +55,8 @@ export default function App({name = 'Kai'}: Props) {
 			setInput('');
 		} else if (!key.ctrl && !key.meta && value.length > 0) {
 			setInput(prev => prev + value);
+		} else {
+			logger.info(`No input: ${value}`);
 		}
 	});
 
@@ -59,23 +65,18 @@ export default function App({name = 'Kai'}: Props) {
 			setLoading(true);
 			setError('');
 
-			const apiKey = process.env['OPENAI_API_KEY'];
-			if (!apiKey) {
-				setError('OPENAI_API_KEY environment variable is not set.');
+			if (!openaiClient) {
+				setError(openaiError);
 				setLoading(false);
 				return;
 			}
 
-			const client = new OpenAI({
-				apiKey,
-			});
-
-			const response = await client.models.list();
+			const response = await openaiClient.models.list();
 			const models = response.data.sort((a, b) => b.created - a.created);
 			setModels(models);
 		} catch (err) {
 			setError(err instanceof Error ? err.message : 'Failed to fetch models');
-			console.error(err);
+			logger.error(err);
 		} finally {
 			setLoading(false);
 		}
@@ -105,10 +106,7 @@ export default function App({name = 'Kai'}: Props) {
 			{/* Loading indicator */}
 			{loading && (
 				<Box marginTop={1}>
-					<Text color="green">
-						<Spinner type="dots" />
-					</Text>
-					<Text color="yellow">Loading...</Text>
+					<Spinner type="dots" label="Loading..." />
 				</Box>
 			)}
 
@@ -124,7 +122,9 @@ export default function App({name = 'Kai'}: Props) {
 				<Box flexDirection="column" marginTop={1} width="100%">
 					<Text bold>OpenAI Models:</Text>
 					<ScrollArea height={24}>
-						<Table data={models} columns={['id', 'created', 'owned_by']} />
+						{models.map(model => (
+							<Text key={model.id}>{model.id}</Text>
+						))}
 					</ScrollArea>
 				</Box>
 			)}
