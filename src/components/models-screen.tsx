@@ -1,11 +1,11 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {Box, Newline, Text, useInput} from 'ink';
 import {Alert, Spinner} from '@inkjs/ui';
 import {useAtom} from 'jotai';
 
 import {logger} from '../logger.js';
 import {ScrollArea} from './scroll-area.js';
-import {openaiClientAtom, openaiErrorAtom} from '../store/openai.js';
+import {openaiClientAtom, openaiErrorAtom, currentModelAtom} from '../store/openai.js';
 import {currentScreenAtom} from '../store/ui.js';
 
 interface Model {
@@ -23,14 +23,79 @@ export const ModelsScreen: React.FC<ModelsScreenProps> = ({onExit}) => {
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState('');
 	const [filterText, setFilterText] = useState('');
+	const [selectedIndex, setSelectedIndex] = useState(0); // Track selected model index
 	const [currentScreen] = useAtom(currentScreenAtom);
 	const [openaiClient] = useAtom(openaiClientAtom);
 	const [openaiError] = useAtom(openaiErrorAtom);
+	const [currentModel, setCurrentModel] = useAtom(currentModelAtom);
+
+	// Filter models based on current filter text
+	const filteredModels = models.filter(model => {
+		if (!filterText) return true;
+
+		const modelId = model.id.toLowerCase();
+		const filter = filterText.toLowerCase();
+
+		// Prefix search: ^o1
+		if (filter.startsWith('^')) {
+			return modelId.startsWith(filter.slice(1));
+		}
+
+		// Suffix search: tts$
+		if (filter.endsWith('$')) {
+			return modelId.endsWith(filter.slice(0, -1));
+		}
+
+		// Default substring search
+		return modelId.includes(filter);
+	});
+
+	// Reset selected index when filter changes
+	useEffect(() => {
+		setSelectedIndex(0);
+	}, [filterText]);
 
 	// Handle user input
 	useInput((value, key) => {
 		if (currentScreen !== 'models') return;
 		logger.info(`User input: ${JSON.stringify(key)}: ${value}`);
+
+		// Handle Up/Down for cursor navigation
+		if (key.upArrow) {
+			// Move cursor up
+			setSelectedIndex(prev => Math.max(0, prev - 1));
+			return;
+		}
+
+		if (key.downArrow) {
+			// Move cursor down
+			setSelectedIndex(prev => Math.min(filteredModels.length - 1, prev + 1));
+			return;
+		}
+
+		// Handle Enter to select model
+		if (key.return) {
+			logger.info(`User input: ${value}`);
+			if (value.trim() === '/exit') {
+				logger.info(`Exiting models screen`);
+				onExit();
+				return;
+			}
+
+			// Select the current model if there are filtered models
+			if (filteredModels.length > 0 && selectedIndex >= 0) {
+				const selectedModel = filteredModels[selectedIndex];
+				if (selectedModel) {
+					logger.info(`Selected model: ${selectedModel.id}`);
+					setCurrentModel(selectedModel.id);
+					// Show a confirmation
+					setError(`Model set to ${selectedModel.id}`);
+					setTimeout(() => setError(''), 1500);
+				}
+			}
+
+			return;
+		}
 
 		// Handle Ctrl+U to reset filter
 		if (key.ctrl && value === 'u') {
@@ -39,14 +104,7 @@ export const ModelsScreen: React.FC<ModelsScreenProps> = ({onExit}) => {
 			return;
 		}
 
-		if (key.return) {
-			logger.info(`User input: ${value}`);
-			if (value.trim() === '/exit') {
-				logger.info(`Exiting models screen`);
-				onExit();
-				return;
-			}
-		} else if (key.escape) {
+		if (key.escape) {
 			if (filterText) {
 				// If there's a filter, clear it first on ESC
 				setFilterText('');
@@ -65,7 +123,7 @@ export const ModelsScreen: React.FC<ModelsScreenProps> = ({onExit}) => {
 	});
 
 	// Fetch models on component mount
-	React.useEffect(() => {
+	useEffect(() => {
 		if (currentScreen === 'models') {
 			fetchModels();
 		}
@@ -104,6 +162,12 @@ export const ModelsScreen: React.FC<ModelsScreenProps> = ({onExit}) => {
 				</Text>
 			</Box>
 
+			<Box marginBottom={1}>
+				<Text>
+					Current model: <Text color="yellow" bold>{currentModel}</Text>
+				</Text>
+			</Box>
+
 			{/* Loading indicator */}
 			{loading && (
 				<Box marginTop={1}>
@@ -114,7 +178,9 @@ export const ModelsScreen: React.FC<ModelsScreenProps> = ({onExit}) => {
 			{/* Error message */}
 			{error && (
 				<Alert variant="error">
-					<Text color="red">Error: {error}</Text>
+					<Text color={error.startsWith('Model set to') ? 'green' : 'red'}>
+						{error}
+					</Text>
 				</Alert>
 			)}
 
@@ -142,33 +208,30 @@ export const ModelsScreen: React.FC<ModelsScreenProps> = ({onExit}) => {
 				</Box>
 			)}
 
+			{/* Navigation help */}
+			{filteredModels.length > 0 && (
+				<Box marginY={1}>
+					<Text dimColor>
+						Use <Text color="yellow">↑↓</Text> to navigate, <Text color="yellow">Enter</Text> to select, <Text color="yellow">ESC</Text> to go back
+					</Text>
+				</Box>
+			)}
+
 			{/* Models list */}
-			{models.length > 0 && (
+			{filteredModels.length > 0 && (
 				<Box flexDirection="column" marginTop={1} width="100%">
-					<ScrollArea height={filterText ? 22 : 24}>
-						{models
-							.filter(model => {
-								if (!filterText) return true;
-
-								const modelId = model.id.toLowerCase();
-								const filter = filterText.toLowerCase();
-
-								// Prefix search: ^o1
-								if (filter.startsWith('^')) {
-									return modelId.startsWith(filter.slice(1));
-								}
-
-								// Suffix search: tts$
-								if (filter.endsWith('$')) {
-									return modelId.endsWith(filter.slice(0, -1));
-								}
-
-								// Default substring search
-								return modelId.includes(filter);
-							})
-							.map(model => (
-								<Text key={model.id}>{model.id}</Text>
-							))}
+					<ScrollArea height={filterText ? 20 : 22}>
+						{filteredModels.map((model, index) => (
+							<Box key={model.id} width="100%">
+								<Text
+									backgroundColor={index === selectedIndex ? 'white' : undefined}
+									color={index === selectedIndex ? 'black' : undefined}
+									bold={model.id === currentModel}
+								>
+									{index === selectedIndex ? '> ' : '  '}{model.id}{model.id === currentModel ? ' <= (current)' : ''}
+								</Text>
+							</Box>
+						))}
 					</ScrollArea>
 				</Box>
 			)}
