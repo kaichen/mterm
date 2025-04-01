@@ -1,0 +1,10 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+- this project is nodejs cli program
+- base on ink library for cli
+- DONT run any server via `npm run`
+- DONT install package, just tell me the required dependencies.
+- read md files in docs folder if change with mentioned package.
