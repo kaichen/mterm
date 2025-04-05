@@ -2,9 +2,6 @@ import {atom} from 'jotai';
 import OpenAI from 'openai';
 
 // Atom for storing OpenAI client instance
-import {atom} from 'jotai';
-import OpenAI from 'openai';
-// Atom for storing OpenAI client instance
 export const openaiClientAtom = atom<OpenAI | null>(() => {
 	const apiKey = process.env['OPENAI_API_KEY'];
 	if (!apiKey) {

@@ -34,7 +34,7 @@ const customTheme = extendTheme(defaultTheme, {
 	components: {
 		Spinner: {
 			styles: {
-				frame: (props: object): TextProps => ({
+				frame: (_props: object): TextProps => ({
 					color: 'magenta',
 				}),
 			},

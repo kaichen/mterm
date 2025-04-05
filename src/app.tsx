@@ -6,6 +6,7 @@ import {useAtom} from 'jotai';
 
 import {ChatScreen} from './components/chat-screen.js';
 import {ModelsScreen} from './components/models-screen.js';
+import {McpProvider} from './components/mcp-provider.js';
 import {useClearExit} from './hooks/use-clear-exit.js';
 import {currentScreenAtom} from './store/ui.js';
 import {logger} from './logger.js';
@@ -46,39 +47,38 @@ export default function App({name = 'Kai'}: Props) {
 		}
 	});
 
-	// Handle screen changes
-	if (currentScreen === 'chat') {
-		return <ChatScreen onExit={() => setCurrentScreen('main')} />;
-	}
-
-	if (currentScreen === 'models') {
-		return <ModelsScreen onExit={() => setCurrentScreen('main')} />;
-	}
-
 	return (
-		<Box flexDirection="column">
-			<Gradient name="rainbow">
-				<BigText text="MTERM" />
-			</Gradient>
-			<Text>
-				Hello, <Text color="green">{name}</Text>
-				<Newline />
-			</Text>
+		<McpProvider>
+			{currentScreen === 'chat' ? (
+				<ChatScreen onExit={() => setCurrentScreen('main')} />
+			) : currentScreen === 'models' ? (
+				<ModelsScreen onExit={() => setCurrentScreen('main')} />
+			) : (
+				<Box flexDirection="column">
+					<Gradient name="rainbow">
+						<BigText text="MTERM" />
+					</Gradient>
+					<Text>
+						Hello, <Text color="green">{name}</Text>
+						<Newline />
+					</Text>
 
-			{/* Input area */}
-			<Box marginTop={1}>
-				<Text>{'> '}</Text>
-				<Text>{input}</Text>
-			</Box>
+					{/* Input area */}
+					<Box marginTop={1}>
+						<Text>{'> '}</Text>
+						<Text>{input}</Text>
+					</Box>
 
-			{/* Help text */}
-			<Box marginTop={1}>
-				<Text dimColor>
-					Type <Text color="green">/models</Text> to see available OpenAI models
-					<Newline />
-					Type <Text color="green">/chat</Text> to start chatting with OpenAI
-				</Text>
-			</Box>
-		</Box>
+					{/* Help text */}
+					<Box marginTop={1}>
+						<Text dimColor>
+							Type <Text color="green">/models</Text> to see available OpenAI models
+							<Newline />
+							Type <Text color="green">/chat</Text> to start chatting with OpenAI
+						</Text>
+					</Box>
+				</Box>
+			)}
+		</McpProvider>
 	);
 }

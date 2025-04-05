@@ -1,115 +1,35 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {Box, Text, useInput} from 'ink';
-import {Alert, Spinner} from '@inkjs/ui';
+import {Spinner} from '@inkjs/ui';
 import {useAtom} from 'jotai';
 
 import {logger} from '../logger.js';
 import {ScrollArea} from './scroll-area.js';
 import {openaiClientAtom, openaiErrorAtom, currentModelAtom} from '../store/openai.js';
 import {currentScreenAtom} from '../store/ui.js';
-
-interface ToolCall {
-	id: string;
-	type: 'function';
-	function: {
-		name: string;
-		arguments: string;
-	};
-}
-
-interface Message {
-	role: 'system' | 'user' | 'assistant' | 'developer' | 'tool';
-	content: string;
-	name?: string;
-	tool_calls?: ToolCall[];
-	tool_call_id?: string;
-}
+import {
+	mcpClientAtom,
+	mcpToolsAtom,
+	mcpErrorAtom,
+	handleToolCalls,
+} from '../store/mcp.js';
+import { RoleBadge } from './role-badge.js';
+import { Message, Tool, ToolCall } from '../types.js';
+import { AlertError } from './alert-error.js';
+import { convertToOpenAIMessage } from '../utils/format-message.js';
 
 interface ChatScreenProps {
 	onExit: () => void;
 }
 
-// Define tool interface
-interface Tool {
-	type: 'function';
-	function: {
-		name: string;
-		description: string;
-		parameters: Record<string, any>;
-	};
+const developerMessage = {
+	role: 'developer',
+	content:
+		'You are a helpful AI assistant. Be concise and clear in your responses.',
 }
 
-// Available tools
-const availableTools: Tool[] = [
-	{
-		type: 'function',
-		function: {
-			name: 'get_weather',
-			description: 'Get the current weather in a given location',
-			parameters: {
-				type: 'object',
-				properties: {
-					location: {
-						type: 'string',
-						description: 'The city and state, e.g. San Francisco, CA',
-					},
-				},
-				required: ['location'],
-			},
-		},
-	},
-];
-
-// Mock get_weather function with hardcoded values
-const mockGetWeather = (location: string) => {
-	return {
-		location,
-		temperature: 22,
-		unit: 'celsius',
-		forecast: ['sunny', 'clear'],
-		humidity: 45,
-	};
-};
-
-// Handle tool calls
-const handleToolCalls = (toolCalls: ToolCall[]) => {
-	return toolCalls.map(toolCall => {
-		if (toolCall.function.name === 'get_weather') {
-			try {
-				const args = JSON.parse(toolCall.function.arguments);
-				const result = mockGetWeather(args.location);
-				return {
-					role: 'tool' as const,
-					tool_call_id: toolCall.id,
-					name: toolCall.function.name,
-					content: JSON.stringify(result),
-				};
-			} catch (error) {
-				return {
-					role: 'tool' as const,
-					tool_call_id: toolCall.id,
-					name: toolCall.function.name,
-					content: JSON.stringify({error: 'Failed to parse arguments'}),
-				};
-			}
-		}
-		return {
-			role: 'tool' as const,
-			tool_call_id: toolCall.id,
-			name: toolCall.function.name,
-			content: JSON.stringify({error: 'Tool not found'}),
-		};
-	});
-};
-
 export const ChatScreen: React.FC<ChatScreenProps> = ({onExit}) => {
-	const [messages, setMessages] = useState<Message[]>([
-		{
-			role: 'developer',
-			content:
-				'You are a helpful AI assistant. Be concise and clear in your responses.',
-		},
-	]);
+	const [messages, setMessages] = useState<Message[]>([developerMessage as Message]);
 	const [input, setInput] = useState('');
 	const [isLoading, setIsLoading] = useState(false);
 	const [error, setError] = useState('');
@@ -118,10 +38,35 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({onExit}) => {
 	const [openaiError] = useAtom(openaiErrorAtom);
 	const [currentModel, setCurrentModel] = useAtom(currentModelAtom);
 
+	// MCP states
+	const [mcpClient] = useAtom(mcpClientAtom);
+	const [mcpTools] = useAtom(mcpToolsAtom);
+	const [mcpError] = useAtom(mcpErrorAtom);
+
+	// Combine all available tools for OpenAI
+	const [combinedTools, setCombinedTools] = useState<Tool[]>([]);
+
+	// Update tools when MCP tools change
+	useEffect(() => {
+		if (mcpTools.length > 0) {
+			// Convert MCP tools to OpenAI tool format
+			const mcpOpenAITools = mcpTools.map(tool => ({
+				type: 'function' as const,
+				function: {
+					name: tool.name,
+					description: tool.description || `MCP tool: ${tool.name}`,
+					parameters: tool.inputSchema,
+				},
+			}));
+
+			setCombinedTools([...mcpOpenAITools]);
+			logger.info('Combined tools updated with MCP tools:' + JSON.stringify(mcpOpenAITools.map(tool => tool.function.name)));
+		}
+	}, [mcpTools]);
+
 	// Handle user input
 	useInput((value, key) => {
 		if (currentScreen !== 'chat') return;
-		logger.info(`User input: ${JSON.stringify(key)}: ${value}`);
 		if (key.return) {
 			logger.info(`User input: ${input}`);
 			const trimmedInput = input.trim();
@@ -187,62 +132,11 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({onExit}) => {
 				return;
 			}
 
-			// Convert internal message format to OpenAI format
-			const convertToOpenAIMessage = (message: Message) => {
-				// Handle developer role as system
-				if (message.role === 'developer') {
-					return {
-						role: 'system' as const,
-						content: message.content,
-					};
-				}
-
-				// Handle each role with the appropriate type
-				switch (message.role) {
-					case 'system':
-						return {
-							role: 'system' as const,
-							content: message.content,
-						};
-					case 'user':
-						return {
-							role: 'user' as const,
-							content: message.content,
-						};
-					case 'assistant':
-						return {
-							role: 'assistant' as const,
-							content: message.content,
-							tool_calls: message.tool_calls,
-						};
-					case 'tool':
-						// Skip tool messages that don't have required tool_call_id
-						if (!message.tool_call_id) {
-							return {
-								role: 'user' as const,
-								content: `Tool response without ID: ${message.content}`,
-							};
-						}
-						return {
-							role: 'tool' as const,
-							content: message.content,
-							tool_call_id: message.tool_call_id,
-							name: message.name,
-						};
-					default:
-						// This shouldn't happen with proper typing but just in case
-						return {
-							role: 'user' as const,
-							content: message.content,
-						};
-				}
-			};
-
-			// Send the request to OpenAI with tools
+			// Send the request to OpenAI with combined tools (OpenAI + MCP)
 			const response = await openaiClient!.chat.completions.create({
 				model: currentModel,
 				messages: messages.concat(userMessage).map(convertToOpenAIMessage),
-				tools: availableTools,
+				tools: combinedTools,
 				tool_choice: 'auto',
 			});
 
@@ -263,7 +157,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({onExit}) => {
 				// Handle tool calls if present
 				if (assistantMessage.tool_calls && assistantMessage.tool_calls.length > 0) {
 					// Process tool calls and get results
-					const toolResults = handleToolCalls(assistantMessage.tool_calls as unknown as ToolCall[]);
+					const toolResults = await handleToolCalls(mcpClient, mcpTools, assistantMessage.tool_calls as unknown as ToolCall[]);
 					newMessages.push(...toolResults);
 
 					// Send another request with the tool results
@@ -283,8 +177,6 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({onExit}) => {
 						});
 					}
 				}
-
-				// Update messages state with all new messages
 				setMessages(prev => [...prev, ...newMessages]);
 			}
 		} catch (err) {
@@ -295,40 +187,10 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({onExit}) => {
 		}
 	};
 
-	// Render role badge
-	const RoleBadge = ({role, name}: {role: string; name?: string}) => {
-		let color = 'white';
-		let displayRole = role.toUpperCase();
-
-		switch (role) {
-			case 'system':
-				color = 'yellow';
-				break;
-			case 'user':
-				color = 'blue';
-				break;
-			case 'assistant':
-				color = 'green';
-				break;
-			case 'tool':
-				color = 'magenta';
-				displayRole = `TOOL:${name?.toUpperCase() || ''}`;
-				break;
-		}
-
-		return (
-			<Box marginRight={1}>
-				<Text color={color} bold>
-					{displayRole}:
-				</Text>
-			</Box>
-		);
-	};
-
 	if (currentScreen !== 'chat') return null;
 
 	return (
-		<Box flexDirection="column" height={30}>
+		<Box flexDirection="column">
 			<Box marginBottom={1}>
 				<Text bold>
 					Chat with OpenAI [<Text color="yellow">{currentModel}</Text>]{' '}
@@ -372,12 +234,9 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({onExit}) => {
 				</Box>
 			</ScrollArea>
 
-			{/* Error message */}
-			{error && (
-				<Alert variant="error">
-					<Text color="red">Error: {error}</Text>
-				</Alert>
-			)}
+			{/* Error messages */}
+			<AlertError error={error} />
+			<AlertError error={mcpError} />
 
 			{/* Input area */}
 			<Box marginTop={1}>
