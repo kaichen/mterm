@@ -72,9 +72,11 @@ export default function App({name = 'Kai'}: Props) {
 					{/* Help text */}
 					<Box marginTop={1}>
 						<Text dimColor>
-							Type <Text color="green">/models</Text> to see available OpenAI models
+							Type <Text color="green">/models</Text> to see available OpenAI
+							models
 							<Newline />
-							Type <Text color="green">/chat</Text> to start chatting with OpenAI
+							Type <Text color="green">/chat</Text> to start chatting with
+							OpenAI
 						</Text>
 					</Box>
 				</Box>

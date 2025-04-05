@@ -8,7 +8,7 @@ const ctrlC = '\x03';
 export const useClearExit = (): void => {
 	const {exit} = useApp();
 	const [currentScreen] = useAtom(currentScreenAtom);
-	
+
 	const exitWithClear = useCallback(() => {
 		clear();
 		exit();
@@ -21,12 +21,15 @@ export const useClearExit = (): void => {
 		stdin.addListener('data', listener);
 		return () => void stdin.removeListener('data', listener);
 	});
-	
+
 	// Only exit when ESC is pressed in the main screen
 	// For chat and models screens, navigation is handled in their respective components
-	useInput((_, {escape}) => {
-		if (escape && currentScreen === 'main') {
-			exitWithClear();
-		}
-	}, {isActive: true});
+	useInput(
+		(_, {escape}) => {
+			if (escape && currentScreen === 'main') {
+				exitWithClear();
+			}
+		},
+		{isActive: true},
+	);
 };

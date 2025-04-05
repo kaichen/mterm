@@ -4,7 +4,11 @@ import {Spinner} from '@inkjs/ui';
 import {useAtom} from 'jotai';
 
 import {logger} from '../logger.js';
-import {openaiClientAtom, openaiErrorAtom, currentModelAtom} from '../store/openai.js';
+import {
+	openaiClientAtom,
+	openaiErrorAtom,
+	currentModelAtom,
+} from '../store/openai.js';
 import {currentScreenAtom} from '../store/ui.js';
 import {
 	mcpClientsAtom,
@@ -12,10 +16,10 @@ import {
 	mcpErrorAtom,
 	handleToolCalls,
 } from '../store/mcp.js';
-import { RoleBadge } from './role-badge.js';
-import { Message, Tool, ToolCall } from '../types.js';
-import { AlertError } from './alert-error.js';
-import { convertToOpenAIMessage } from '../utils/format-message.js';
+import {RoleBadge} from './role-badge.js';
+import {Message, Tool, ToolCall} from '../types.js';
+import {AlertError} from './alert-error.js';
+import {convertToOpenAIMessage} from '../utils/format-message.js';
 
 interface ChatScreenProps {
 	onExit: () => void;
@@ -25,10 +29,12 @@ const developerMessage = {
 	role: 'developer',
 	content:
 		'You are a helpful AI assistant. Be concise and clear in your responses.',
-}
+};
 
 export const ChatScreen: React.FC<ChatScreenProps> = ({onExit}) => {
-	const [messages, setMessages] = useState<Message[]>([developerMessage as Message]);
+	const [messages, setMessages] = useState<Message[]>([
+		developerMessage as Message,
+	]);
 	const [input, setInput] = useState('');
 	const [isLoading, setIsLoading] = useState(false);
 	const [error, setError] = useState('');
@@ -59,7 +65,10 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({onExit}) => {
 			}));
 
 			setCombinedTools([...mcpOpenAITools]);
-			logger.info('Combined tools updated with MCP tools:' + JSON.stringify(mcpOpenAITools.map(tool => tool.function.name)));
+			logger.info(
+				'Combined tools updated with MCP tools:' +
+					JSON.stringify(mcpOpenAITools.map(tool => tool.function.name)),
+			);
 		}
 	}, [mcpTools]);
 
@@ -154,9 +163,16 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({onExit}) => {
 				];
 
 				// Handle tool calls if present
-				if (assistantMessage.tool_calls && assistantMessage.tool_calls.length > 0) {
+				if (
+					assistantMessage.tool_calls &&
+					assistantMessage.tool_calls.length > 0
+				) {
 					// Process tool calls and get results
-					const toolResults = await handleToolCalls(mcpClients, mcpTools, assistantMessage.tool_calls as unknown as ToolCall[]);
+					const toolResults = await handleToolCalls(
+						mcpClients,
+						mcpTools,
+						assistantMessage.tool_calls as unknown as ToolCall[],
+					);
 					newMessages.push(...toolResults);
 
 					// Send another request with the tool results
@@ -172,7 +188,8 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({onExit}) => {
 					if (secondResponse.choices[0]?.message) {
 						newMessages.push({
 							role: 'assistant',
-							content: secondResponse.choices[0].message.content || 'No response',
+							content:
+								secondResponse.choices[0].message.content || 'No response',
 						});
 					}
 				}
@@ -193,43 +210,50 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({onExit}) => {
 			<Box marginBottom={1}>
 				<Text bold>
 					Chat with OpenAI [<Text color="yellow">{currentModel}</Text>]{' '}
-					<Text color="gray">(Type '/exit' to return to main screen, '/setmodel {currentModel}' to change model)</Text>
+					<Text color="gray">
+						(Type '/exit' to return to main screen, '/setmodel {currentModel}'
+						to change model)
+					</Text>
 				</Text>
 			</Box>
 
 			{/* Chat messages */}
-				<Box flexDirection="column">
-					{messages
-						.filter(msg => msg.role !== 'developer')
-						.map((message, index) => (
-							<Box key={index} flexDirection="column" marginBottom={1}>
-								<Box flexDirection="row">
-									<RoleBadge role={message.role} name={message.name} />
-									<Text wrap="wrap">{message.content}</Text>
-								</Box>
-								{message.tool_calls && (
-									<Box flexDirection="column" marginLeft={2} marginTop={1}>
-										{message.tool_calls.map((toolCall, i) => (
-											<Box key={i} flexDirection="column" marginBottom={1}>
-												<Box>
-													<Text color="cyan" bold>Tool Call: </Text>
-													<Text color="cyan">{toolCall.function.name}</Text>
-												</Box>
-												<Box marginLeft={2}>
-													<Text color="gray" wrap="wrap">Args: {toolCall.function.arguments}</Text>
-												</Box>
-											</Box>
-										))}
-									</Box>
-								)}
+			<Box flexDirection="column">
+				{messages
+					.filter(msg => msg.role !== 'developer')
+					.map((message, index) => (
+						<Box key={index} flexDirection="column" marginBottom={1}>
+							<Box flexDirection="row">
+								<RoleBadge role={message.role} name={message.name} />
+								<Text wrap="wrap">{message.content}</Text>
 							</Box>
-						))}
-					{isLoading && (
-						<Box>
-							<Spinner type="dots" label="Thinking..." />
+							{message.tool_calls && (
+								<Box flexDirection="column" marginLeft={2} marginTop={1}>
+									{message.tool_calls.map((toolCall, i) => (
+										<Box key={i} flexDirection="column" marginBottom={1}>
+											<Box>
+												<Text color="cyan" bold>
+													Tool Call:{' '}
+												</Text>
+												<Text color="cyan">{toolCall.function.name}</Text>
+											</Box>
+											<Box marginLeft={2}>
+												<Text color="gray" wrap="wrap">
+													Args: {toolCall.function.arguments}
+												</Text>
+											</Box>
+										</Box>
+									))}
+								</Box>
+							)}
 						</Box>
-					)}
-				</Box>
+					))}
+				{isLoading && (
+					<Box>
+						<Spinner type="dots" label="Thinking..." />
+					</Box>
+				)}
+			</Box>
 
 			{/* Error messages */}
 			<AlertError error={error} />

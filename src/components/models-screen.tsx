@@ -5,7 +5,11 @@ import {useAtom} from 'jotai';
 
 import {logger} from '../logger.js';
 import {ScrollArea} from './scroll-area.js';
-import {openaiClientAtom, openaiErrorAtom, currentModelAtom} from '../store/openai.js';
+import {
+	openaiClientAtom,
+	openaiErrorAtom,
+	currentModelAtom,
+} from '../store/openai.js';
 import {currentScreenAtom} from '../store/ui.js';
 
 interface Model {
@@ -164,7 +168,10 @@ export const ModelsScreen: React.FC<ModelsScreenProps> = ({onExit}) => {
 
 			<Box marginBottom={1}>
 				<Text>
-					Current model: <Text color="yellow" bold>{currentModel}</Text>
+					Current model:{' '}
+					<Text color="yellow" bold>
+						{currentModel}
+					</Text>
 				</Text>
 			</Box>
 
@@ -188,9 +195,13 @@ export const ModelsScreen: React.FC<ModelsScreenProps> = ({onExit}) => {
 			{filterText && (
 				<Box marginY={1}>
 					<Text>Filter: </Text>
-					<Text color="blue" bold>{filterText}</Text>
+					<Text color="blue" bold>
+						{filterText}
+					</Text>
 					<Box marginLeft={2}>
-						<Text dimColor><Text color="gray">(Ctrl+U to reset)</Text></Text>
+						<Text dimColor>
+							<Text color="gray">(Ctrl+U to reset)</Text>
+						</Text>
 					</Box>
 				</Box>
 			)}
@@ -212,7 +223,9 @@ export const ModelsScreen: React.FC<ModelsScreenProps> = ({onExit}) => {
 			{filteredModels.length > 0 && (
 				<Box marginY={1}>
 					<Text dimColor>
-						Use <Text color="yellow">↑↓</Text> to navigate, <Text color="yellow">Enter</Text> to select, <Text color="yellow">ESC</Text> to go back
+						Use <Text color="yellow">↑↓</Text> to navigate,{' '}
+						<Text color="yellow">Enter</Text> to select,{' '}
+						<Text color="yellow">ESC</Text> to go back
 					</Text>
 				</Box>
 			)}
@@ -224,11 +237,15 @@ export const ModelsScreen: React.FC<ModelsScreenProps> = ({onExit}) => {
 						{filteredModels.map((model, index) => (
 							<Box key={model.id} width="100%">
 								<Text
-									backgroundColor={index === selectedIndex ? 'white' : undefined}
+									backgroundColor={
+										index === selectedIndex ? 'white' : undefined
+									}
 									color={index === selectedIndex ? 'black' : undefined}
 									bold={model.id === currentModel}
 								>
-									{index === selectedIndex ? '> ' : '  '}{model.id}{model.id === currentModel ? ' <= (current)' : ''}
+									{index === selectedIndex ? '> ' : '  '}
+									{model.id}
+									{model.id === currentModel ? ' <= (current)' : ''}
 								</Text>
 							</Box>
 						))}

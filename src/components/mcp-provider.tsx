@@ -23,43 +23,51 @@ export const McpProvider: React.FC<McpProviderProps> = ({children}) => {
 
 	// Initialize MCP clients when entering chat mode
 	useEffect(() => {
-	if (currentScreen === 'chat' && !mcpConnected) {
-		const connect = async () => {
-		try {
-			const {clients, tools} = await initializeMcpClient();
-			setMcpClients(clients);
-			setMcpTools(tools);
-			setMcpConnected(true);
-			logger.info(`MCP: Connected to ${clients.length} servers with ${tools.length} total tools`);
-		} catch (error) {
-			const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-			setMcpError(`Failed to initialize MCP clients: ${errorMessage}`);
-			logger.error('MCP connection error:', error);
+		if (currentScreen === 'chat' && !mcpConnected) {
+			const connect = async () => {
+				try {
+					const {clients, tools} = await initializeMcpClient();
+					setMcpClients(clients);
+					setMcpTools(tools);
+					setMcpConnected(true);
+					logger.info(
+						`MCP: Connected to ${clients.length} servers with ${tools.length} total tools`,
+					);
+				} catch (error) {
+					const errorMessage =
+						error instanceof Error ? error.message : 'Unknown error';
+					setMcpError(`Failed to initialize MCP clients: ${errorMessage}`);
+					logger.error('MCP connection error:', error);
+				}
+			};
+
+			connect();
 		}
+
+		// Clean up when leaving chat mode
+		return () => {
+			if (mcpConnected) {
+				setMcpClients(clients => {
+					// Close all client connections
+					for (const clientWithTools of clients) {
+						try {
+							logger.info(
+								`Closing MCP client connection for ${clientWithTools.id}`,
+							);
+							clientWithTools.client.close();
+						} catch (error) {
+							logger.error(
+								`Error closing MCP client for ${clientWithTools.id}:`,
+								error,
+							);
+						}
+					}
+					return [];
+				});
+				setMcpConnected(false);
+				setMcpTools([]);
+			}
 		};
-
-		connect();
-	}
-
-	// Clean up when leaving chat mode
-	return () => {
-		if (mcpConnected) {
-		setMcpClients(clients => {
-			// Close all client connections
-			for (const clientWithTools of clients) {
-			try {
-				logger.info(`Closing MCP client connection for ${clientWithTools.id}`);
-				clientWithTools.client.close();
-			} catch (error) {
-				logger.error(`Error closing MCP client for ${clientWithTools.id}:`, error);
-			}
-			}
-			return [];
-		});
-		setMcpConnected(false);
-		setMcpTools([]);
-		}
-	};
 	}, [currentScreen, mcpConnected]);
 
 	return <>{children}</>;
