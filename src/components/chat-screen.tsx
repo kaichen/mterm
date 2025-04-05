@@ -4,11 +4,10 @@ import {Spinner} from '@inkjs/ui';
 import {useAtom} from 'jotai';
 
 import {logger} from '../logger.js';
-import {ScrollArea} from './scroll-area.js';
 import {openaiClientAtom, openaiErrorAtom, currentModelAtom} from '../store/openai.js';
 import {currentScreenAtom} from '../store/ui.js';
 import {
-	mcpClientAtom,
+	mcpClientsAtom,
 	mcpToolsAtom,
 	mcpErrorAtom,
 	handleToolCalls,
@@ -39,7 +38,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({onExit}) => {
 	const [currentModel, setCurrentModel] = useAtom(currentModelAtom);
 
 	// MCP states
-	const [mcpClient] = useAtom(mcpClientAtom);
+	const [mcpClients] = useAtom(mcpClientsAtom);
 	const [mcpTools] = useAtom(mcpToolsAtom);
 	const [mcpError] = useAtom(mcpErrorAtom);
 
@@ -157,7 +156,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({onExit}) => {
 				// Handle tool calls if present
 				if (assistantMessage.tool_calls && assistantMessage.tool_calls.length > 0) {
 					// Process tool calls and get results
-					const toolResults = await handleToolCalls(mcpClient, mcpTools, assistantMessage.tool_calls as unknown as ToolCall[]);
+					const toolResults = await handleToolCalls(mcpClients, mcpTools, assistantMessage.tool_calls as unknown as ToolCall[]);
 					newMessages.push(...toolResults);
 
 					// Send another request with the tool results
@@ -199,7 +198,6 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({onExit}) => {
 			</Box>
 
 			{/* Chat messages */}
-			<ScrollArea height={24}>
 				<Box flexDirection="column">
 					{messages
 						.filter(msg => msg.role !== 'developer')
@@ -232,7 +230,6 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({onExit}) => {
 						</Box>
 					)}
 				</Box>
-			</ScrollArea>
 
 			{/* Error messages */}
 			<AlertError error={error} />

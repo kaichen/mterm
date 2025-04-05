@@ -28,5 +28,6 @@ export interface Message {
 export interface FlatTool {
 	name: string;
 	description?: string;
-	inputSchema: Record<string, any>;
+	inputSchema: any;
+	serverId?: string; // ID of the server this tool belongs to
 }
