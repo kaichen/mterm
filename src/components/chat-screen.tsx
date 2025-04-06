@@ -38,6 +38,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({onExit}) => {
 	const [input, setInput] = useState('');
 	const [isLoading, setIsLoading] = useState(false);
 	const [error, setError] = useState('');
+	const [hideToolMessages, setHideToolMessages] = useState(true);
 	const [currentScreen] = useAtom(currentScreenAtom);
 	const [openaiClient] = useAtom(openaiClientAtom);
 	const [openaiError] = useAtom(openaiErrorAtom);
@@ -97,6 +98,19 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({onExit}) => {
 						},
 					]);
 				}
+				setInput('');
+				return;
+			} else if (trimmedInput === '/toggletools') {
+				setHideToolMessages(prev => !prev);
+				setMessages(prev => [
+					...prev,
+					{
+						role: 'system',
+						content: `Tool messages are now ${
+							hideToolMessages ? 'visible' : 'hidden'
+						}`,
+					},
+				]);
 				setInput('');
 				return;
 			}
@@ -212,7 +226,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({onExit}) => {
 					Chat with OpenAI [<Text color="yellow">{currentModel}</Text>]{' '}
 					<Text color="gray">
 						(Type '/exit' to return to main screen, '/setmodel {currentModel}'
-						to change model)
+						to change model, '/toggletools' to {hideToolMessages ? 'show' : 'hide'} tool messages)
 					</Text>
 				</Text>
 			</Box>
@@ -220,7 +234,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({onExit}) => {
 			{/* Chat messages */}
 			<Box flexDirection="column">
 				{messages
-					.filter(msg => msg.role !== 'developer')
+					.filter(msg => msg.role !== 'developer' && !(hideToolMessages && msg.role === 'tool'))
 					.map((message, index) => (
 						<Box key={index} flexDirection="column" marginBottom={1}>
 							<Box flexDirection="row">
