@@ -4,6 +4,7 @@ import {Spinner} from '@inkjs/ui';
 import {useAtom} from 'jotai';
 
 import {logger} from '../logger.js';
+import {logMessageToSession} from '../utils/session-logger.js';
 import {
 	openaiClientAtom,
 	openaiErrorAtom,
@@ -35,6 +36,11 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({onExit}) => {
 	const [messages, setMessages] = useState<Message[]>([
 		developerMessage as Message,
 	]);
+
+	// Log initial developer message
+	useEffect(() => {
+		logMessageToSession(developerMessage as Message);
+	}, []);
 	const [input, setInput] = useState('');
 	const [isLoading, setIsLoading] = useState(false);
 	const [error, setError] = useState('');
@@ -90,27 +96,25 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({onExit}) => {
 				if (modelId) {
 					logger.info(`Setting model to: ${modelId}`);
 					setCurrentModel(modelId);
-					setMessages(prev => [
-						...prev,
-						{
-							role: 'system',
-							content: `Model changed to ${modelId}`,
-						},
-					]);
+					const systemMessage = {
+						role: 'system' as const,
+						content: `Model changed to ${modelId}`,
+					};
+					setMessages(prev => [...prev, systemMessage]);
+					logMessageToSession(systemMessage);
 				}
 				setInput('');
 				return;
 			} else if (trimmedInput === '/toggletools') {
 				setHideToolMessages(prev => !prev);
-				setMessages(prev => [
-					...prev,
-					{
-						role: 'system',
-						content: `Tool messages are now ${
-							hideToolMessages ? 'visible' : 'hidden'
-						}`,
-					},
-				]);
+				const toggleMessage = {
+					role: 'system' as const,
+					content: `Tool messages are now ${
+						hideToolMessages ? 'visible' : 'hidden'
+					}`,
+				};
+				setMessages(prev => [...prev, toggleMessage]);
+				logMessageToSession(toggleMessage);
 				setInput('');
 				return;
 			}
@@ -146,6 +150,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({onExit}) => {
 			// Add user message to the chat
 			const userMessage: Message = {role: 'user', content};
 			setMessages(prev => [...prev, userMessage]);
+			logMessageToSession(userMessage);
 
 			if (openaiError || !openaiClient) {
 				// Set error state instead of mocking response
@@ -166,6 +171,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({onExit}) => {
 			if (response.choices[0]?.message) {
 				const assistantMessage = response.choices[0].message;
 				logger.info(`Assistant response: ${JSON.stringify(assistantMessage)}`);
+				logMessageToSession(assistantMessage);
 
 				// Add assistant response to the chat
 				const newMessages: Message[] = [
@@ -188,6 +194,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({onExit}) => {
 						assistantMessage.tool_calls as unknown as ToolCall[],
 					);
 					newMessages.push(...toolResults);
+					logMessageToSession(toolResults);
 
 					// Send another request with the tool results
 					const secondResponse = await openaiClient!.chat.completions.create({
@@ -200,11 +207,13 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({onExit}) => {
 					});
 
 					if (secondResponse.choices[0]?.message) {
-						newMessages.push({
+						const otherMessage = {
 							role: 'assistant',
 							content:
 								secondResponse.choices[0].message.content || 'No response',
-						});
+						};
+						newMessages.push(otherMessage as Message);
+						logMessageToSession(otherMessage);
 					}
 				}
 				setMessages(prev => [...prev, ...newMessages]);
