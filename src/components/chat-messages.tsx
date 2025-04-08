@@ -3,7 +3,7 @@ import {Box, Text} from 'ink';
 import {Spinner} from '@inkjs/ui';
 import {RoleBadge} from './role-badge.js';
 import {AlertError} from './alert-error.js';
-import {Message, ToolCall} from '../types.js';
+import {Message} from '../types.js';
 
 interface ChatMessagesProps {
 	messages: Message[];

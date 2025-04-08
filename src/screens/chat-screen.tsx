@@ -18,8 +18,8 @@ import {
 } from '../store/mcp.js';
 import {Message, Tool, ToolCall} from '../types.js';
 import {convertToOpenAIMessage} from '../utils/format-message.js';
-import {ChatMessages} from './chat-messages.js';
-import {ChatInput} from './chat-input.js';
+import {ChatMessages} from '../components/chat-messages.js';
+import {ChatInput} from '../components/chat-input.js';
 
 interface ChatScreenProps {
 	onExit: () => void;
@@ -219,7 +219,8 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({onExit}) => {
 					Chat with OpenAI [<Text color="yellow">{currentModel}</Text>]{' '}
 					<Text color="gray">
 						(Type '/exit' to return to main screen, '/setmodel {currentModel}'
-						to change model, '/toggletools' to {hideToolMessages ? 'show' : 'hide'} tool messages)
+						to change model, '/toggletools' to{' '}
+						{hideToolMessages ? 'show' : 'hide'} tool messages)
 					</Text>
 				</Text>
 			</Box>

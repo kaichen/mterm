@@ -4,7 +4,7 @@ import {StdioClientTransport} from '@modelcontextprotocol/sdk/client/stdio.js';
 import path from 'path';
 import fs from 'fs';
 import {logger} from '../logger.js';
-import {FlatTool, Message, ToolCall, Tool} from '../types.js';
+import {FlatTool, Message, ToolCall} from '../types.js';
 
 // Type for MCP server configuration
 export interface McpServerConfig {

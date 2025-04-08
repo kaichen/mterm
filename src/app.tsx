@@ -4,8 +4,8 @@ import Gradient from 'ink-gradient';
 import React, {useState} from 'react';
 import {useAtom} from 'jotai';
 
-import {ChatScreen} from './components/chat-screen.js';
-import {ModelsScreen} from './components/models-screen.js';
+import {ChatScreen} from './screens/chat-screen.js';
+import {ModelsScreen} from './screens/models-screen.js';
 import {McpProvider} from './components/mcp-provider.js';
 import {useClearExit} from './hooks/use-clear-exit.js';
 import {currentScreenAtom} from './store/ui.js';

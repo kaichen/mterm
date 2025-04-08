@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
-import { Message } from '../types.js';
-import { logger } from '../logger.js';
+import {Message} from '../types.js';
+import {logger} from '../logger.js';
 
 const SESSION_FILE = 'session.jsonl';
 
@@ -10,17 +10,17 @@ const SESSION_FILE = 'session.jsonl';
  * @param message The message to append
  */
 export const logMessageToSession = (message: any): void => {
-  try {
-    // Convert message to JSON line
-    const jsonLine = JSON.stringify(message) + '\n';
+	try {
+		// Convert message to JSON line
+		const jsonLine = JSON.stringify(message) + '\n';
 
-    // Append to file
-    fs.appendFileSync(path.resolve(process.cwd(), SESSION_FILE), jsonLine);
+		// Append to file
+		fs.appendFileSync(path.resolve(process.cwd(), SESSION_FILE), jsonLine);
 
-    logger.info(`Message logged to session file: ${message.role}`);
-  } catch (error) {
-    logger.error('Failed to write message to session file:', error);
-  }
+		logger.info(`Message logged to session file: ${message.role}`);
+	} catch (error) {
+		logger.error('Failed to write message to session file:', error);
+	}
 };
 
 /**
@@ -28,5 +28,5 @@ export const logMessageToSession = (message: any): void => {
  * @param messages Array of messages to log
  */
 export const logMessagesToSession = (messages: Message[]): void => {
-  messages.forEach(message => logMessageToSession(message));
+	messages.forEach(message => logMessageToSession(message));
 };

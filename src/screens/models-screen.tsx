@@ -4,7 +4,7 @@ import {Alert, Spinner} from '@inkjs/ui';
 import {useAtom} from 'jotai';
 
 import {logger} from '../logger.js';
-import {ScrollArea} from './scroll-area.js';
+import {ScrollArea} from '../components/scroll-area.js';
 import {
 	openaiClientAtom,
 	openaiErrorAtom,
