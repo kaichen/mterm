@@ -213,8 +213,8 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({onExit}) => {
 	if (currentScreen !== 'chat') return null;
 
 	return (
-		<Box flexDirection="column">
-			<Box marginBottom={1}>
+		<Box flexDirection="column" padding={1}>
+			<Box marginBottom={1} paddingX={1}>
 				<Text bold>
 					Chat with OpenAI [<Text color="yellow">{currentModel}</Text>]{' '}
 					<Text color="gray">

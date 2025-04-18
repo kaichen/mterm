@@ -1,5 +1,5 @@
 import React from 'react';
-import {Box, Text} from 'ink';
+import {Box, Text, Static} from 'ink';
 import {Spinner} from '@inkjs/ui';
 import {RoleBadge} from './role-badge.js';
 import {AlertError} from './alert-error.js';
@@ -21,15 +21,15 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
 	hideToolMessages,
 }) => {
 	return (
-		<Box flexDirection="column">
-			<Box flexDirection="column">
-				{messages
+    <Box flexDirection="column">
+		<Box flexDirection="column" flexGrow={1} gap={1}>
+			<Static items={messages
 					.filter(
 						msg =>
 							msg.role !== 'developer' &&
 							!(hideToolMessages && msg.role === 'tool'),
-					)
-					.map((message, index) => (
+					)}>
+				{(message, index) => (
 						<Box key={index} flexDirection="column" marginBottom={1}>
 							<Box flexDirection="row">
 								<RoleBadge role={message.role} name={message.name} />
@@ -55,13 +55,14 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
 								</Box>
 							)}
 						</Box>
-					))}
-				{isLoading && (
-					<Box>
-						<Spinner type="dots" label="Thinking..." />
-					</Box>
-				)}
+					)}
+			</Static>
 			</Box>
+			{isLoading && (
+				<Box>
+					<Spinner type="dots" label="Thinking..." />
+				</Box>
+			)}
 
 			<AlertError error={error} />
 			<AlertError error={mcpError} />
