@@ -21,9 +21,9 @@ export const RoleBadge = ({role, name}: {role: string; name?: string}) => {
 	}
 
 	return (
-		<Box marginRight={1}>
+		<Box marginLeft={1} borderColor="gray">
 			<Text color={color} bold>
-				{displayRole}:
+				{displayRole}
 			</Text>
 		</Box>
 	);

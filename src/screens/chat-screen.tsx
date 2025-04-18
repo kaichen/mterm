@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from 'react';
-import {Box, Text, useInput} from 'ink';
+import {Box, Spacer, Static, Text, useInput} from 'ink';
 import {useAtom} from 'jotai';
 
 import {logger} from '../logger.js';
@@ -214,7 +214,17 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({onExit}) => {
 
 	return (
 		<Box flexDirection="column" padding={1}>
-			<Box marginBottom={1} paddingX={1}>
+			<Box flexDirection="column" flexGrow={1}>
+				<ChatMessages
+					messages={messages}
+					isLoading={isLoading}
+					error={error}
+					mcpError={mcpError}
+					hideToolMessages={hideToolMessages}
+				/>
+			<ChatInput input={input} />
+			</Box>
+			<Box marginTop={1} borderStyle="round" borderColor="gray">
 				<Text bold>
 					Chat with OpenAI [<Text color="yellow">{currentModel}</Text>]{' '}
 					<Text color="gray">
@@ -223,17 +233,8 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({onExit}) => {
 						{hideToolMessages ? 'show' : 'hide'} tool messages)
 					</Text>
 				</Text>
+			<Spacer />
 			</Box>
-
-			<ChatMessages
-				messages={messages}
-				isLoading={isLoading}
-				error={error}
-				mcpError={mcpError}
-				hideToolMessages={hideToolMessages}
-			/>
-
-			<ChatInput input={input} />
 		</Box>
 	);
 };
