@@ -21,7 +21,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
 	hideToolMessages,
 }) => {
 	return (
-		<Box flexDirection="column" width="100%">
+		<Box flexDirection="column">
 		<Box flexDirection="column" flexGrow={1} gap={1}>
 			<Static items={messages
 					.filter(
