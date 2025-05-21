@@ -1,7 +1,7 @@
 import {Box, Newline, Text, useInput} from 'ink';
 import BigText from 'ink-big-text';
 import Gradient from 'ink-gradient';
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {useAtom} from 'jotai';
 
 import {ChatScreen} from './screens/chat-screen.js';
@@ -12,13 +12,21 @@ import {currentScreenAtom} from './store/ui.js';
 import {logger} from './logger.js';
 
 interface Props {
-	name: string | undefined;
+	initialScreen?: string | undefined;
 }
 
-export default function App({name = 'Kai'}: Props) {
+export default function App({initialScreen}: Props) {
 	useClearExit();
 	const [input, setInput] = useState('');
 	const [currentScreen, setCurrentScreen] = useAtom(currentScreenAtom);
+
+	useEffect(() => {
+		if (initialScreen === 'chat' || initialScreen === 'models') {
+			setCurrentScreen(initialScreen);
+		}
+		// If initialScreen is not 'chat' or 'models', or undefined,
+		// it will default to 'main' as currentScreenAtom's default value is 'main'.
+	}, [initialScreen, setCurrentScreen]);
 
 	useInput((value, key) => {
 		// Only handle input in main screen
@@ -58,10 +66,6 @@ export default function App({name = 'Kai'}: Props) {
 					<Gradient name="rainbow">
 						<BigText text="MTERM" />
 					</Gradient>
-					<Text>
-						Hello, <Text color="green">{name}</Text>
-						<Newline />
-					</Text>
 
 					{/* Input area */}
 					<Box marginTop={1}>

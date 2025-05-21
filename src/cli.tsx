@@ -11,22 +11,15 @@ import {ThemeProvider, extendTheme, defaultTheme} from '@inkjs/ui';
 const cli = meow(
 	`
 	Usage
-	  $ mterm
-
-	Options
-		--name  Your name
+	  $ mterm [screen_name]
 
 	Examples
-	  $ mterm --name=Jane
-	  Hello, Jane
+	  $ mterm chat
+	  $ mterm models
 `,
 	{
 		importMeta: import.meta,
-		flags: {
-			name: {
-				type: 'string',
-			},
-		},
+		flags: {},
 	},
 );
 
@@ -57,7 +50,7 @@ enterFullscreen();
 const {clear, waitUntilExit} = render(
 	<React.Suspense fallback={<Fallback />}>
 		<ThemeProvider theme={customTheme}>
-			<App name={cli.flags.name} />
+			<App initialScreen={cli.input[0]} />
 		</ThemeProvider>
 	</React.Suspense>,
 	{
