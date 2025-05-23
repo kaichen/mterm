@@ -1,6 +1,5 @@
 import {useApp, useInput, useStdin} from 'ink';
 import {useCallback, useLayoutEffect} from 'react';
-import {clear} from '../cli.js';
 import {useAtom} from 'jotai';
 import {currentScreenAtom} from '../store/ui.js';
 
@@ -10,7 +9,8 @@ export const useClearExit = (): void => {
 	const [currentScreen] = useAtom(currentScreenAtom);
 
 	const exitWithClear = useCallback(() => {
-		clear();
+		// Don't clear to keep output in terminal
+		// clear();
 		exit();
 	}, [exit]);
 

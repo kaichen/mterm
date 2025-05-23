@@ -3,7 +3,7 @@ import {Box, Text, render, TextProps} from 'ink';
 import meow from 'meow';
 import React from 'react';
 import App from './app.js';
-import {enterFullscreen, exitFullscreen} from './utils/terminal.js';
+// import {enterFullscreen, exitFullscreen} from './utils/terminal.js';
 import {useAtom} from 'jotai';
 import {globalErrorAtom} from './store/ui.js';
 import {ThemeProvider, extendTheme, defaultTheme} from '@inkjs/ui';
@@ -46,7 +46,7 @@ const Fallback = () => {
 	);
 };
 
-enterFullscreen();
+// enterFullscreen();
 const {clear, waitUntilExit} = render(
 	<React.Suspense fallback={<Fallback />}>
 		<ThemeProvider theme={customTheme}>
@@ -57,6 +57,7 @@ const {clear, waitUntilExit} = render(
 		exitOnCtrlC: false,
 	},
 );
-waitUntilExit().then(() => exitFullscreen());
+waitUntilExit();
+// .then(() => exitFullscreen());
 
 export {clear};
