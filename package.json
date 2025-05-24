@@ -46,6 +46,10 @@
 		"typescript": "^5.0.3"
 	},
 	"ava": {
+		"files": [
+			"tests/**/*.test.{ts,tsx}",
+			"test.tsx"
+		],
 		"extensions": {
 			"ts": "module",
 			"tsx": "module"

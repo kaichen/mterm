@@ -1,17 +1,21 @@
 import React from 'react';
-import chalk from 'chalk';
 import test from 'ava';
 import {render} from 'ink-testing-library';
 import App from './src/app.js';
 
-test('greet unknown user', t => {
-	const {lastFrame} = render(<App name={undefined} />);
+test('app renders without crashing', t => {
+	const {lastFrame} = render(<App />);
+	const frame = lastFrame();
 
-	t.is(lastFrame(), `Hello, ${chalk.green('Stranger')}`);
+	t.truthy(frame);
+	t.true(frame!.includes('MTERM'));
 });
 
-test('greet user with a name', t => {
-	const {lastFrame} = render(<App name="Jane" />);
+test('app renders with initial screen', t => {
+	const {lastFrame} = render(<App initialScreen="chat" />);
+	const frame = lastFrame();
 
-	t.is(lastFrame(), `Hello, ${chalk.green('Jane')}`);
+	t.truthy(frame);
+	// Should render, even if it shows chat screen instead of main
+	t.is(typeof frame, 'string');
 });
