@@ -13,9 +13,10 @@ import {logger} from './logger.js';
 
 interface Props {
 	initialScreen?: string | undefined;
+	enableMcp?: boolean;
 }
 
-export default function App({initialScreen}: Props) {
+export default function App({initialScreen, enableMcp = false}: Props) {
 	useClearExit();
 	const [input, setInput] = useState('');
 	const [currentScreen, setCurrentScreen] = useAtom(currentScreenAtom);
@@ -55,8 +56,8 @@ export default function App({initialScreen}: Props) {
 		}
 	});
 
-	return (
-		<McpProvider>
+	const content = (
+		<>
 			{currentScreen === 'chat' ? (
 				<ChatScreen onExit={() => setCurrentScreen('main')} />
 			) : currentScreen === 'models' ? (
@@ -85,6 +86,8 @@ export default function App({initialScreen}: Props) {
 					</Box>
 				</Box>
 			)}
-		</McpProvider>
+		</>
 	);
+
+	return enableMcp ? <McpProvider>{content}</McpProvider> : content;
 }

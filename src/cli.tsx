@@ -13,13 +13,22 @@ const cli = meow(
 	Usage
 	  $ mterm [screen_name]
 
+	Options
+	  --enable-mcp  Enable MCP (Model Context Protocol) support
+
 	Examples
 	  $ mterm chat
 	  $ mterm models
+	  $ mterm --enable-mcp
 `,
 	{
 		importMeta: import.meta,
-		flags: {},
+		flags: {
+			enableMcp: {
+				type: 'boolean',
+				default: false,
+			},
+		},
 	},
 );
 
@@ -50,7 +59,7 @@ const Fallback = () => {
 const {clear, waitUntilExit} = render(
 	<React.Suspense fallback={<Fallback />}>
 		<ThemeProvider theme={customTheme}>
-			<App initialScreen={cli.input[0]} />
+			<App initialScreen={cli.input[0]} enableMcp={cli.flags.enableMcp} />
 		</ThemeProvider>
 	</React.Suspense>,
 	{
